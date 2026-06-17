@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A1428">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IronRoot CRM">
+<title>IronRoot CRM</title>
+
+<!-- ============================================================= -->
+<!--  IRONROOT CRM — CLOUD SETTINGS                                 -->
+<!--  Fill in the THREE values below (see the setup guide).         -->
+<!--  Everything between the quote marks "" only.                   -->
+<!-- ============================================================= -->
+<script>
+  // 1) Your Supabase Project URL  (looks like https://abcd1234.supabase.co)
+  const SUPABASE_URL = "https://boslbbjoqqbseehfpwqv.supabase.co";
+
+  // 2) Your Supabase anon public key  (a long string starting with "ey...")
+  const SUPABASE_KEY = "sb_publishable_eXQzvXsuYkizoe3VcrsaNQ_27oJVrOQ";
+
+  // 3) The shared password your team types to open the CRM
+  const TEAM_PASSWORD = "ironroot2026";
+</script>
+<!-- ============================================================= -->
+<!--  Do not edit anything below this line.                         -->
+<!-- ============================================================= -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --navy:#0A1428; --navy-grad-1:#0d1a35; --navy-grad-2:#0a1226; --navy-grad-3:#070d1c;
+    --panel:#101d3a; --panel-2:#16264a; --panel-hi:#1b2c54; --line:#E2DBCB; --line-soft:#EAE4D6;
+    --ink:#1b2436; --mut:#5d6783; --faint:#8b93a8;
+    --gold:#c9a04a; --gold-bright:#d9b86a; --gold-deep:#a9863c; --gold-line:rgba(201,160,74,.4);
+    --green:#4cae7d; --amber:#d6a23e; --red:#d66a6a;
+    --green-bg:rgba(76,174,125,.14); --amber-bg:rgba(214,162,62,.15); --red-bg:rgba(214,106,106,.15);
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --shadow:0 2px 14px rgba(0,0,0,.28);
+    --shadow-2:0 18px 50px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;color:var(--ink);font-family:var(--sans);
+    background:#EFEADD;
+    background-image:
+      radial-gradient(120% 80% at 80% -10%, rgba(201,160,74,.07) 0%, transparent 55%),
+      linear-gradient(170deg, #F2EEE3 0%, #ECE6D7 100%);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:calc(78px + env(safe-area-inset-bottom));
+    min-height:100vh;
+  }
+
+  /* eyebrow motif: gold dash + spaced caps */
+  .eyebrow{display:flex;align-items:center;gap:13px;margin-bottom:18px}
+  .eyebrow .dash{width:30px;height:1.5px;background:var(--gold);flex:none}
+  .eyebrow .txt{font-size:11px;letter-spacing:3.5px;text-transform:uppercase;color:var(--mut);font-weight:600}
+
+  /* header */
+  header{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(180deg, rgba(10,20,40,.97), rgba(10,20,40,.82));
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid #243456;
+    padding:calc(14px + env(safe-area-inset-top)) 20px 15px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .ring{width:50px;height:50px;flex:none;position:relative}
+  .ring svg{width:100%;height:100%}
+  .brandname{font-family:var(--serif);font-size:27px;font-weight:600;line-height:1;letter-spacing:.3px;color:#eef2f9}
+  .brandname .root{color:var(--gold)}
+  .brandsub{font-size:10px;letter-spacing:3.5px;color:#9aa8c6;margin-top:6px;font-weight:600}
+  .hd-right{margin-left:auto;display:flex;align-items:center;gap:11px}
+  .pill{display:flex;align-items:center;gap:7px;border:1px solid #243456;border-radius:30px;padding:8px 14px;font-size:13px;color:#9aa8c6;font-weight:600;background:rgba(255,255,255,.02)}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--gold)}
+
+  main{padding:26px 20px 30px;max-width:940px;margin:0 auto}
+
+  /* section title — serif with italic gold accent */
+  .sect-title{font-family:var(--serif);font-size:30px;font-weight:600;letter-spacing:-.3px;line-height:1.1;margin:0 0 22px}
+  .sect-title em{font-style:italic;color:var(--gold);font-weight:600}
+  .sect-sub-title{font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.2px;margin:26px 0 14px}
+  .sect-sub-title em{font-style:italic;color:var(--gold)}
+
+  .row-between{display:flex;align-items:center;justify-content:space-between;gap:14px}
+
+  /* stat cards */
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:13px;margin-bottom:30px}
+  .stat{
+    border:1px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;
+    background:linear-gradient(160deg, var(--panel) 0%, var(--panel-2) 100%);
+    transition:transform .12s,border-color .2s,box-shadow .2s;text-align:left;color:var(--ink);
+    position:relative;overflow:hidden;
+  }
+  .stat::before{content:"";position:absolute;top:0;left:20px;width:26px;height:2px;background:var(--gold);opacity:.85}
+  .stat:hover{border-color:var(--gold-line);box-shadow:var(--shadow)}
+  .stat:active{transform:scale(.985)}
+  .stat .lab{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);font-weight:600;margin-top:8px}
+  .stat .big{font-family:var(--serif);font-size:40px;font-weight:600;line-height:1;margin-top:15px;letter-spacing:.3px;color:#f4f1ea}
+  .stat .sub{font-size:13px;color:#9aa8c6;margin-top:12px}
+
+  /* cards */
+  .card{
+    border:1px solid var(--line);border-radius:15px;padding:17px 18px;margin-bottom:12px;cursor:pointer;
+    background:#FFFFFF;
+    transition:border-color .2s,transform .1s,box-shadow .2s;
+  }
+  .card:hover{border-color:var(--gold-line);box-shadow:var(--shadow)}
+  .card:active{transform:scale(.992)}
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:13px}
+  .card-name{font-size:17px;font-weight:700;line-height:1.3;letter-spacing:-.2px;color:var(--ink)}
+  .card-loc{font-size:13.5px;color:var(--mut);margin-top:5px}
+  .card-cost{font-family:var(--serif);font-size:21px;font-weight:600;color:var(--gold-bright);flex:none;text-align:right;max-width:45%;overflow-wrap:break-word;word-break:break-word;line-height:1.15}
+  .card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:12px}
+  .card-stage{font-size:13px;color:var(--mut);display:flex;align-items:center;gap:9px}
+  .prob{display:flex;align-items:center;gap:9px;min-width:118px}
+  .prob .pbar{flex:1;height:6px;background:#E8E2D4;border-radius:3px;overflow:hidden}
+  .prob .pbar i{display:block;height:100%;border-radius:3px}
+  .prob .pv{font-size:13px;font-weight:800;width:38px;text-align:right;font-variant-numeric:tabular-nums}
+
+  .tag{font-size:10px;font-weight:800;letter-spacing:.6px;padding:4px 10px;border-radius:30px;text-transform:uppercase;border:1px solid transparent}
+  .t-green{background:var(--green-bg);color:var(--green);border-color:rgba(76,174,125,.3)}
+  .t-amber{background:var(--amber-bg);color:var(--amber);border-color:rgba(214,162,62,.3)}
+  .t-red{background:var(--red-bg);color:var(--red);border-color:rgba(214,106,106,.3)}
+
+  /* white-ish action card on navy */
+  .acard{
+    border:1px solid var(--line);border-radius:15px;padding:17px 19px;margin-bottom:12px;cursor:pointer;
+    background:#FFFFFF;
+    transition:border-color .2s,transform .1s;
+  }
+  .acard:hover{border-color:var(--gold-line)}
+  .acard:active{transform:scale(.992)}
+  .acard-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+  .acard-title{font-size:16px;font-weight:700;line-height:1.32;color:var(--ink);letter-spacing:-.1px}
+  .acard-sub{font-size:13px;color:var(--mut);margin-top:6px}
+  .acard-date{font-size:15px;font-weight:700;color:var(--gold-deep);white-space:nowrap;flex:none;font-variant-numeric:tabular-nums}
+
+  /* filters */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .filt{background:#FFFFFF;border:1px solid var(--line);color:var(--mut);font-size:13px;padding:7px 15px;border-radius:30px;cursor:pointer;font-weight:600}
+  .filt.on{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:700}
+  .search{width:100%;background:#FFFFFF;border:1px solid var(--line);border-radius:13px;padding:13px 16px;font-size:15px;color:var(--ink);font-family:inherit;margin-bottom:16px}
+  .search::placeholder{color:var(--faint)}
+
+  /* segments */
+  .seg-tabs{display:flex;gap:8px;margin-bottom:16px}
+  .seg-tab{flex:1;text-align:center;background:#FFFFFF;border:1px solid var(--line);color:var(--mut);font-size:14px;padding:11px;border-radius:12px;cursor:pointer;font-weight:600}
+  .seg-tab.on{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:700}
+  .seg{border:1px solid var(--line);border-radius:15px;padding:18px;margin-bottom:12px;cursor:pointer;background:#FFFFFF;transition:border-color .2s}
+  .seg:hover{border-color:var(--gold-line)}
+  .seg-head{display:flex;justify-content:space-between;align-items:center}
+  .seg-name{font-family:var(--serif);font-size:19px;font-weight:600;color:var(--ink)}
+  .seg-count{font-family:var(--serif);background:var(--navy);border:1px solid var(--gold-line);color:var(--gold);font-weight:600;font-size:17px;padding:3px 15px;border-radius:30px}
+  .seg-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:14px;background:#E8E2D4}
+  .seg-bar span{display:block;height:100%}
+  .seg-sub{color:var(--mut);font-size:13.5px;margin-top:12px}
+
+  /* contacts/capital simple cards */
+  .lcard{border:1px solid var(--line);border-radius:15px;padding:17px 18px;margin-bottom:12px;cursor:pointer;background:#FFFFFF;transition:border-color .2s,transform .1s}
+  .lcard:hover{border-color:var(--gold-line)}
+  .lcard:active{transform:scale(.992)}
+  .lcard-head{display:flex;justify-content:space-between;align-items:flex-start;gap:13px}
+  .lcard-title{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.2px}
+  .lcard-sub{font-size:13.5px;color:var(--mut);margin-top:5px}
+  .chip{background:#F4F0E6;border:1px solid var(--line);color:var(--mut);font-size:12.5px;padding:4px 11px;border-radius:8px;white-space:nowrap}
+  .chip b{color:var(--ink);font-weight:600}
+  .meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+
+  .pri{font-size:10px;font-weight:800;letter-spacing:.5px;padding:4px 10px;border-radius:30px;border:1px solid transparent}
+  .p-high{background:var(--red-bg);color:var(--red);border-color:rgba(214,106,106,.3)}
+  .p-med{background:var(--amber-bg);color:var(--amber);border-color:rgba(214,162,62,.3)}
+  .p-low{background:#F4F0E6;color:var(--mut)}
+  .done{opacity:.45}.done .acard-title{text-decoration:line-through}
+
+  .view{display:none}
+  .view.active{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+  .flag{background:var(--red-bg);border:1px solid rgba(214,106,106,.35);border-radius:14px;padding:15px;margin-bottom:18px;font-size:14px;color:#f0cccc;line-height:1.5}
+  .flag b{color:var(--red)}
+  .note{border:1px solid var(--gold-line);border-radius:14px;padding:16px;margin-bottom:18px;font-size:14px;color:var(--mut);line-height:1.55;background:rgba(201,160,74,.06)}
+  .note b{color:var(--gold)}
+  .foot{color:var(--faint);font-size:11.5px;text-align:center;margin-top:28px;line-height:1.9;letter-spacing:.2px}
+
+  /* alerts */
+  .alert-group-title{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;margin:24px 0 12px;display:flex;align-items:center;gap:10px}
+  .alert-group-title .cnt{font-family:var(--sans);font-size:11px;font-weight:700;padding:2px 9px;border-radius:30px;letter-spacing:0}
+  .ag-over{color:var(--red)} .ag-over .cnt{background:var(--red-bg);color:var(--red)}
+  .ag-soon{color:var(--amber)} .ag-soon .cnt{background:var(--amber-bg);color:var(--amber)}
+  .ag-stale{color:var(--mut)} .ag-stale .cnt{background:rgba(255,255,255,.06);color:var(--mut)}
+  .ag-pri{color:var(--gold)} .ag-pri .cnt{background:rgba(201,160,74,.12);color:var(--gold)}
+  .alert{border:1px solid var(--line);border-left-width:3px;border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;background:#FFFFFF;transition:border-color .2s,transform .1s}
+  .alert:active{transform:scale(.992)}
+  .alert.l-over{border-left-color:var(--red)}
+  .alert.l-soon{border-left-color:var(--amber)}
+  .alert.l-stale{border-left-color:var(--mut)}
+  .alert.l-pri{border-left-color:var(--gold)}
+  .alert-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .alert-title{font-size:15px;font-weight:700;line-height:1.3;color:var(--ink)}
+  .alert-sub{font-size:12.5px;color:var(--mut);margin-top:5px}
+  .alert-when{font-size:12.5px;font-weight:800;white-space:nowrap;flex:none}
+  .empty-state{text-align:center;padding:50px 20px;color:var(--mut)}
+  .empty-state .ico{font-size:34px;color:var(--gold);opacity:.5;margin-bottom:14px}
+  .empty-state .t{font-family:var(--serif);font-size:20px;margin-bottom:6px;color:var(--ink)}
+  .empty-state .d{font-size:14px}
+
+  /* bottom nav */
+  nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:linear-gradient(180deg, rgba(10,18,38,.92), rgba(7,13,28,.98));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid #243456;display:flex;padding-bottom:env(safe-area-inset-bottom)}
+  nav button{flex:1;background:none;border:none;color:#9aa8c6;padding:10px 1px;font-size:9.5px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font-family:inherit;letter-spacing:.2px;position:relative}
+  nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  nav button.active{color:var(--gold)}
+  nav .nav-badge{position:absolute;top:5px;right:50%;transform:translateX(15px);background:var(--red);color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;font-family:var(--sans)}
+
+  /* slide panel */
+  .ovl{position:fixed;inset:0;background:rgba(4,8,18,.66);z-index:40;display:none;justify-content:flex-end;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+  .ovl.open{display:flex}
+  .panel{
+    width:100%;max-width:450px;height:100%;overflow-y:auto;box-shadow:var(--shadow-2);
+    background:#EFEADD;
+    background-image:linear-gradient(170deg, #F2EEE3 0%, #ECE6D7 100%);
+    animation:slidein .28s cubic-bezier(.2,.8,.2,1);
+    padding:24px;padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(28px + env(safe-area-inset-bottom));
+    border-left:1px solid var(--line);
+  }
+  @keyframes slidein{from{transform:translateX(100%)}to{transform:none}}
+  @media(max-width:560px){.ovl{align-items:flex-end}.panel{max-width:100%;height:auto;max-height:93vh;border-radius:22px 22px 0 0;border-left:none;border-top:1px solid var(--line);animation:slideup .28s cubic-bezier(.2,.8,.2,1)}@keyframes slideup{from{transform:translateY(100%)}to{transform:none}}}
+  .panel-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+  .panel-id{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+  .panel-x{background:#FFFFFF;border:1px solid var(--line);width:36px;height:36px;border-radius:10px;cursor:pointer;color:var(--mut);font-size:17px;line-height:1;flex:none}
+  .panel-x:active{opacity:.7}
+  .panel-title{font-family:var(--serif);font-size:27px;font-weight:600;letter-spacing:-.2px;line-height:1.2;margin:10px 0 22px;color:var(--ink)}
+  .panel-title em{font-style:italic;color:var(--gold)}
+  .prow{display:flex;gap:14px;padding:11px 0;font-size:14.5px;border-bottom:1px solid var(--line-soft)}
+  .prow .pk{color:var(--mut);min-width:120px;flex:none;font-weight:500}
+  .prow .pv{font-weight:600}
+  .panel-sec{margin-top:22px}
+  .panel-sec h4{font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin:0 0 9px;font-weight:700}
+  .panel-sec p{font-size:14.5px;line-height:1.6;margin:0;color:var(--ink)}
+  .scorewrap{display:flex;gap:11px;margin-top:10px}
+  .scorebox{flex:1;border:1px solid var(--line);border-radius:13px;padding:13px 14px;background:#FFFFFF}
+  .scorebox .sl{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:1px;font-weight:700}
+  .scorebox .sv{font-family:var(--serif);font-size:27px;font-weight:600;margin-top:4px}
+  .bar{height:6px;background:#E8E2D4;border-radius:3px;margin-top:9px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:3px}
+  .panel-actions{display:flex;gap:10px;margin-top:26px;border-top:1px solid var(--line-soft);padding-top:20px}
+  .panel-actions .btn{flex:1}
+  .contact-actions{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+  .contact-link{display:flex;align-items:center;gap:10px;border:1px solid var(--gold-line);color:var(--gold);text-decoration:none;font-weight:600;font-size:15px;padding:14px 16px;border-radius:12px;background:rgba(201,160,74,.06)}
+  .contact-link:active{opacity:.8}
+  .contact-link svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7}
+  .contact-empty{display:flex;align-items:center;border:1px dashed var(--line);color:var(--faint);font-size:13.5px;padding:14px 16px;border-radius:12px}
+
+  .btn{background:var(--gold);color:var(--navy);border:none;border-radius:12px;padding:13px 15px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;text-align:center;letter-spacing:.2px}
+  .btn.ghost{background:#FFFFFF;color:var(--ink);border:1px solid var(--line);font-weight:600}
+  .btn.danger{background:rgba(214,106,106,.08);color:var(--red);border:1px solid rgba(214,106,106,.3);font-weight:600}
+  .btn:active{opacity:.85}
+
+  .fld{margin-bottom:14px}
+  .fld label{display:block;font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px;letter-spacing:.2px}
+  .fld input,.fld select,.fld textarea{width:100%;background:#FFFFFF;border:1px solid var(--line);border-radius:11px;padding:12px 13px;font-size:15px;color:var(--ink);font-family:inherit}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--gold-line)}
+  .fld textarea{min-height:64px;resize:vertical}
+  .fld select option{background:#FFFFFF;color:var(--ink)}
+
+  .integration-row{display:flex;justify-content:space-between;align-items:center;padding:15px 0;border-bottom:1px solid var(--line-soft)}
+  .integration-row .t{font-weight:600;font-size:15px}
+  .integration-row .d{font-size:13px;color:var(--mut);margin-top:3px}
+  .soon{font-size:10px;font-weight:700;background:#F4F0E6;color:var(--mut);padding:5px 11px;border-radius:30px;letter-spacing:.5px}
+  .mini{font-size:13px;padding:8px 14px;border-radius:9px;border:1px solid var(--line);background:#FFFFFF;color:var(--ink);font-weight:600;cursor:pointer;font-family:inherit}
+  .mini.danger{color:var(--red);border-color:rgba(214,106,106,.3)}
+
+  @media(min-width:760px){.stats{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="ring">
+    <svg viewBox="0 0 50 50">
+      <circle cx="25" cy="25" r="23" fill="none" stroke="#c9a04a" stroke-width="1.2"/>
+      <circle cx="25" cy="25" r="19.5" fill="none" stroke="#c9a04a" stroke-width=".6" opacity=".6"/>
+      <text x="25" y="26" text-anchor="middle" dominant-baseline="middle" font-family="Iowan Old Style, Palatino, Georgia, serif" font-size="14" font-weight="600" fill="#c9a04a" letter-spacing="1">IR</text>
+      <line x1="20" y1="33" x2="30" y2="33" stroke="#c9a04a" stroke-width="1"/>
+    </svg>
+  </div>
+  <div>
+    <div class="brandname">Iron<span class="root">Root</span></div>
+    <div class="brandsub">CAPITAL PARTNERS · CRM</div>
+  </div>
+  <div class="hd-right">
+    <div class="pill" id="syncPill"><span class="dot"></span><span class="lbl">Connecting…</span></div>
+  </div>
+</header>
+
+<main>
+
+<!-- DASHBOARD -->
+<section class="view active" id="dashboard">
+  <div class="eyebrow"><span class="dash"></span><span class="txt">Overview</span></div>
+  <div class="stats">
+    <button class="stat" onclick="goView('pipeline')">
+      <div class="lab">Active pipeline</div><div class="big" id="s-active">£0m</div><div class="sub" id="s-active-sub">0 live deals</div>
+    </button>
+    <button class="stat" onclick="goView('pipeline')">
+      <div class="lab">Weighted</div><div class="big" id="s-weighted">£0m</div><div class="sub">probability-adjusted</div>
+    </button>
+    <button class="stat" onclick="goView('projects')">
+      <div class="lab">Africa infra</div><div class="big" id="s-africa">£0m</div><div class="sub" id="s-africa-sub">0 projects</div>
+    </button>
+    <button class="stat" onclick="goView('contacts')">
+      <div class="lab">Contacts</div><div class="big" id="s-contacts">0</div><div class="sub">0 deals won</div>
+    </button>
+  </div>
+  <h2 class="sect-sub-title">Upcoming <em>actions</em></h2>
+  <div id="urgentList"></div>
+  <div class="foot">IronRoot Capital Partners · Internal use only<br>Phase 1 — live data &amp; editing. Phase 2 — Microsoft &amp; Apple sync.</div>
+</section>
+
+<!-- DEALS -->
+<section class="view" id="deals">
+  <div class="row-between" style="margin-bottom:20px"><h1 class="sect-title" style="margin:0">The <em>book</em></h1><button class="btn" style="padding:10px 16px" onclick="openDealForm()">+ Deal</button></div>
+  <input class="search" id="dealSearch" placeholder="Search deals, sponsors, countries…">
+  <div class="filters" id="dealFilters">
+    <span class="filt on" data-f="ALL">All</span>
+    <span class="filt" data-f="GREEN">Green</span>
+    <span class="filt" data-f="AMBER">Amber</span>
+    <span class="filt" data-f="RED">Red</span>
+  </div>
+  <div id="dealList"></div>
+</section>
+
+<!-- PIPELINE -->
+<section class="view" id="pipeline">
+  <h1 class="sect-title">The <em>pipeline</em></h1>
+  <div id="pipeList"></div>
+</section>
+
+<!-- PROJECTS / AFRICA -->
+<section class="view" id="projects">
+  <h1 class="sect-title">By <em>segment</em></h1>
+  <div class="seg-tabs" id="segTabs">
+    <div class="seg-tab on" data-s="region">Region</div>
+    <div class="seg-tab" data-s="sector">Sector</div>
+    <div class="seg-tab" data-s="stage">Stage</div>
+  </div>
+  <div id="segList"></div>
+</section>
+
+<!-- CONTACTS -->
+<section class="view" id="contacts">
+  <div class="row-between" style="margin-bottom:20px"><h1 class="sect-title" style="margin:0">The <em>network</em></h1><button class="btn" style="padding:10px 16px" onclick="openContactForm()">+ Contact</button></div>
+  <input class="search" id="contactSearch" placeholder="Search contacts…">
+  <div id="contactList"></div>
+</section>
+
+<!-- CAPITAL -->
+<section class="view" id="capital">
+  <h1 class="sect-title">The <em>capital</em></h1>
+  <div id="capitalList"></div>
+</section>
+
+<!-- ACTIONS -->
+<section class="view" id="actions">
+  <div class="row-between" style="margin-bottom:20px"><h1 class="sect-title" style="margin:0">The <em>follow-ups</em></h1><button class="btn" style="padding:10px 16px" onclick="openActionForm()">+ Action</button></div>
+  <input class="search" id="actionSearch" placeholder="Search actions…">
+  <div id="actionList"></div>
+</section>
+
+<!-- ALERTS -->
+<section class="view" id="alerts">
+  <h1 class="sect-title">What needs <em>attention</em></h1>
+  <div id="alertList"></div>
+</section>
+
+<!-- MORE -->
+<section class="view" id="more">
+  <h1 class="sect-title">Connected <em>tools</em></h1>
+  <div class="note"><b>Phase 2.</b> These connect IronRoot to your email, calendar and chat. They need a one-time secure setup (server + Microsoft/Apple approvals) — mapped here and ready to switch on.</div>
+  <div class="lcard" style="cursor:default">
+    <div class="integration-row"><div><div class="t">Outlook email sync</div><div class="d">Auto-log threads to deals &amp; contacts</div></div><span class="soon">PHASE 2</span></div>
+    <div class="integration-row"><div><div class="t">Microsoft Teams</div><div class="d">Deal channels &amp; updates</div></div><span class="soon">PHASE 2</span></div>
+    <div class="integration-row"><div><div class="t">Microsoft / Outlook Calendar</div><div class="d">Meetings attached to deals</div></div><span class="soon">PHASE 2</span></div>
+    <div class="integration-row"><div><div class="t">Apple Calendar sync</div><div class="d">Push deal meetings to iPhone (.ics)</div></div><span class="soon">PHASE 2</span></div>
+    <div class="integration-row" style="border:none"><div><div class="t">Microsoft SSO (Azure AD)</div><div class="d">Single sign-on for the team</div></div><span class="soon">PHASE 2</span></div>
+  </div>
+  <h2 class="sect-sub-title">Data</h2>
+  <div class="lcard" style="cursor:default">
+    <div class="integration-row" style="border:none"><div><div class="t">Reset to original tracker data</div><div class="d">Clears local edits on this device</div></div><button class="mini danger" onclick="resetData()">Reset</button></div>
+  </div>
+  <div class="foot">Edits save on this device. Team-wide shared saving arrives with Phase 2.</div>
+</section>
+
+</main>
+
+<nav id="nav">
+  <button class="active" data-v="dashboard" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/><path d="M9.5 21v-6h5v6"/></svg>Home</button>
+  <button data-v="deals" aria-label="Deals"><svg viewBox="0 0 24 24"><path d="M16.5 6.5a3.5 3.5 0 0 0-6.5 1.8V19"/><path d="M7 13h7"/><path d="M7 19h9"/></svg>Deals</button>
+  <button data-v="pipeline" aria-label="Pipeline"><svg viewBox="0 0 24 24"><path d="M4 20V4"/><path d="M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/></svg>Pipeline</button>
+  <button data-v="projects" aria-label="Africa"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/></svg>Africa</button>
+  <button data-v="contacts" aria-label="Contacts"><svg viewBox="0 0 24 24"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 5 5L19 13l2 5v3a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg>Contacts</button>
+  <button data-v="actions" aria-label="Actions"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Actions</button>
+  <button data-v="alerts" aria-label="Alerts"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9z"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Alerts<span class="nav-badge" id="navBadge" style="display:none">0</span></button>
+</nav>
+
+<div class="ovl" id="ovl"><div class="panel" id="panel"></div></div>
+
+<script>
+/* ============ DATE HELPERS ============ */
+const NOW=new Date(2026,5,16); // today: 16 Jun 2026 (matches app context)
+const MON={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+const MON_NAMES=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function parseDate(str){ // "09 Jun 2026" -> Date
+  if(!str)return null;
+  const m=String(str).trim().match(/^(\d{1,2})\s+([A-Za-z]{3})\w*\s+(\d{4})$/);
+  if(!m)return null;
+  const mo=MON[m[2].slice(0,3)]; if(mo===undefined)return null;
+  return new Date(+m[3],mo,+m[1]);
+}
+function fmtDate(d){return d?`${String(d.getDate()).padStart(2,'0')} ${MON_NAMES[d.getMonth()]} ${d.getFullYear()}`:"";}
+function todayStr(){return fmtDate(NOW);}
+function daysBetween(a,b){return Math.round((a-b)/86400000);}
+
+/* ============ SEED DATA ============ */
+const SEED = {
+  deals:[
+    {id:1,title:"Civil Servant Housing",sub:"25,000 units · phase 1: 10,000 · Côte d'Ivoire",country:"Côte d'Ivoire",region:"Africa",sector:"Real estate / housing",rag:"AMBER",type:"Social housing PPP (EPC+F)",need:"€300m (phase 1)",needVal:300,stage:"Negotiation",owner:"Joseph",sponsor:"Valentine (UK focal pt) / Congolese contact close to Min. Finance",security:"Sovereign guarantee, conditional on 3% all-in; promissory notes",route:"Chinese consortium JV (EPC+F at 3%) — pending govt approval",gate:"Govt approval of JV structure; 3% rate vs private credit cost",next:"Joseph to confirm govt openness to JV",updated:"02 Jun 2026"},
+    {id:2,title:"Hospital Build — Eco City",sub:"120 beds · Botswana",country:"Botswana",region:"Africa",sector:"Healthcare",rag:"GREEN",type:"Healthcare construction",need:"~$30m",needVal:30,stage:"Active DD",owner:"Dr Charles",sponsor:"Dr Charles + 2 Botswana entities (RIC Dev. + 1 TBC)",security:"JV; NDAs signed, MOUs part-signed",route:"Kessner + UAE/Saudi partner fund (O&M solution)",gate:"Tripartite NDA signature; docs to Benny ahead of Saudi fund",next:"Dr Charles to send NDA + project docs",updated:"10 Jun 2026"},
+    {id:3,title:"Working Capital — medical devices",sub:"SME private credit · Botswana",country:"Botswana",region:"Africa",sector:"Healthcare",rag:"GREEN",type:"SME private credit",need:"$1m–$5m",needVal:5,stage:"Qualifying",owner:"Dr Charles",sponsor:"Dr Charles",security:"Operating company; 20yr track record; ABSA facility",route:"Kessner SME private credit (cleanest near-term fit)",gate:"DD pack: 3yr audited financials, 6mo mgmt accounts, signed contracts",next:"Dr Charles to provide DD pack",updated:"08 Jun 2026"},
+    {id:4,title:"Ambulance / medical equip refurb",sub:"Scale-up · 3–4 African countries",country:"Multi (Africa)",region:"Africa",sector:"Healthcare",rag:"AMBER",type:"Healthcare / World Bank programme",need:"~$30m",needVal:30,stage:"Early",owner:"Alex / Aaron",sponsor:"Dr Charles",security:"World Bank backing on pilot (delivered 16mo vs 3yr)",route:"TBC — DFI / multilateral aligned",gate:"Confirm if inside WB programme or separate raise",next:"Clarify structure & exact figure",updated:"28 Apr 2026"},
+    {id:5,title:"Commercial Housing — 30 homes",sub:"Residential real estate · Ghana",country:"Ghana",region:"Africa",sector:"Real estate / housing",rag:"AMBER",type:"Residential real estate",need:"TBC",needVal:0,stage:"Early",owner:"Alex / Aaron",sponsor:"Dr Charles",security:"Ghanaian banks reportedly willing to lend (prime Accra location)",route:"Local Ghanaian banks",gate:"Confirm financing requirement & bank appetite",next:"Confirm figure",updated:"01 May 2026"},
+    {id:6,title:"Biomedical plant",sub:"German grant · Germany / Africa",country:"Germany / Africa",region:"Europe",sector:"Healthcare",rag:"GREEN",type:"Equipment / grant-matched",need:"€3.2m grant + $800k equity",needVal:4,stage:"Early",owner:"Dr Charles",sponsor:"Dr Charles",security:"€3.2m German grant secured; needs $800k equity",route:"Grant secured; equity from sponsor",gate:"Sponsor providing $800k equity (willing)",next:"Monitor",updated:"20 May 2026"},
+    {id:7,title:"Further project ('French Ministry')",sub:"TBC · TBC",country:"TBC",region:"Unclassified",sector:"Unclassified",rag:"RED",type:"TBC",need:"~$35m",needVal:35,stage:"Early",owner:"Alex / Aaron",sponsor:"Dr Charles",security:"TBC",route:"TBC",gate:"Identify what the project actually is",next:"Confirm details",updated:"15 Apr 2026"},
+    {id:8,title:"Road — re-asphalt + expand",sub:"2→4 lanes · 120km · Guinea",country:"Guinea",region:"Africa",sector:"Infrastructure",rag:"AMBER",type:"Toll road (brownfield)",need:"~$600m",needVal:600,stage:"Early / flagged",owner:"Joseph",sponsor:"New contact via Joseph",security:"Govt willing to provide iron / bauxite / gold concessions for repayment",route:"TBC — infra fund / resource-backed",gate:"No BOQ or specs yet",next:"Request BOQ + specifications",updated:"05 Jun 2026"},
+    {id:9,title:"Bauxite & Gold Concessions",sub:"Natural resources · Guinea",country:"Guinea",region:"Africa",sector:"Natural resources",rag:"AMBER",type:"Natural resources / commodity",need:"Offtake / trade",needVal:0,stage:"Early",owner:"Joseph",sponsor:"Dr Mombasa (name to confirm; close to Guinean govt)",security:"Govt concessions; 200,000 MT bauxite/month + gold",route:"Bauxite sale to buyers; gold via Aaron's trading platform",gate:"Confirm payment method (KTT etc.) & provenance",next:"Joseph to arrange intro mtg",updated:"06 Jun 2026"},
+    {id:10,title:"Peter Mahama infra pipeline",sub:"8–10 projects · sub-Saharan",country:"Multi (Africa)",region:"Africa",sector:"Infrastructure",rag:"AMBER",type:"Mixed infrastructure",need:"TBC",needVal:0,stage:"Sourcing",owner:"Joseph",sponsor:"Via Joseph (from Peter Mahama)",security:"TBC",route:"TBC",gate:"Get the project list from Joseph",next:"Request list",updated:"10 Apr 2026"},
+    {id:11,title:"AfDB engagement",sub:"Relationship / channel · Pan-African",country:"Pan-African",region:"Africa",sector:"Relationship / channel",rag:"GREEN",type:"Relationship / channel",need:"n/a",needVal:0,stage:"Relationship-building",owner:"Alex",sponsor:"Bradley (Policy Officer, President's Exec Cabinet)",security:"n/a",route:"DFI channel for deals priced below private credit",gate:"Intro to BD team handling projects",next:"Initial call held; seek BD intro",updated:"03 Jun 2026"}
+  ],
+  contacts:[
+    {id:1,name:"Joseph",role:"Facilitator / connector (sources govt infra mandates)",linked:"Côte d'Ivoire, Guinea, Mahama pipeline",side:"Our side (intermediary)",influence:"High",notes:"Met at House of Commons Ghana event. Family-driven. Both facilitators — agree fee/role split.",email:"",phone:""},
+    {id:2,name:"Aaron Minta",role:"Partner; exec recruitment + intl banking/finance background",linked:"All workstreams",side:"Our side",influence:"High",notes:"Same side as Alex.",email:"",phone:""},
+    {id:3,name:"Uncle Ben",role:"Direct contact of Zurich financiers",linked:"CIV housing (ruled out), guarantees",side:"Capital source",influence:"Medium",notes:"Always refer to as 'Uncle Ben'. Blocked-funds mechanism flagged for DD.",email:"",phone:""},
+    {id:4,name:"Benny",role:"Kessner Capital",linked:"Botswana hospital, Dr Charles WC",side:"Capital source",influence:"High",notes:"Sent tripartite NDA; meeting Saudi partner fund MD.",email:"",phone:""},
+    {id:5,name:"Valentine M. Yombo-Djema",role:"UK focal point, Social Landlord-Builder grouping",linked:"CIV housing",side:"Project side",influence:"Medium",notes:"Named on the call; works with the Congolese contact.",email:"",phone:""},
+    {id:6,name:"Dr Charles",role:"Medical devices / construction entrepreneur",linked:"Botswana hospital, WC, Ghana homes, refurb, biomedical",side:"Project side",influence:"High",notes:"26yrs in medical field; 20yr+ operating; ABSA facility; World Bank pilot.",email:"",phone:""},
+    {id:7,name:"Dr Mombasa",role:"Close to Guinean govt",linked:"Guinea bauxite & gold",side:"Project side",influence:"Medium",notes:"Name to confirm (referred to earlier as Dr Ampas).",email:"",phone:""},
+    {id:8,name:"Peter Mahama",role:"Source of 8–10 infra projects",linked:"Mahama pipeline",side:"Project side",influence:"Medium",notes:"Passed projects to Joseph over past year.",email:"",phone:""},
+    {id:9,name:"Bradley",role:"Policy Officer, President's Exec Cabinet, AfDB",linked:"AfDB channel",side:"DFI contact",influence:"High",notes:"Personal contact; route to AfDB BD team.",email:"",phone:""},
+    {id:10,name:"Charles / GBRA Jacques Daniel",role:"General Administrator, BUSOFACI-GIE",linked:"CIV housing",side:"Project side",influence:"Medium",notes:"Focal point in Côte d'Ivoire per project doc.",email:"",phone:""}
+  ],
+  capital:[
+    {id:1,src:"Kessner Capital (Benny)",type:"Private credit + infra partners",sweet:"Scaling, profitable African SMEs; infra via partners",rate:"Bespoke; ~90-day execution",fit:"Dr Charles WC; Botswana hospital (w/ UAE/Saudi O&M fund)",notes:"NFG SA backed. 3 DD pillars: opco creditworthiness, sovereign, structure."},
+    {id:2,src:"Uncle Ben (Zurich financiers)",type:"Private credit",sweet:"Sovereign-guaranteed deals; bank guarantees / SBLCs",rate:"~12% all-in; 6–7yr; bullet; no early-repay penalty",fit:"Sovereign-backed infra priced at commercial rates",notes:"Blocked-funds mechanism flagged for independent DD."},
+    {id:3,src:"Chinese consortium",type:"EPC+F / JV",sweet:"Large infra where they bring construction + financing",rate:"~3% via JV (EPC+F)",fit:"CIV housing (if govt approves JV)",notes:"Less local economic benefit (own contractors/labour). Govt approval pending."},
+    {id:4,src:"Aaron's gold-backed trading platform",type:"Commodity trade",sweet:"Gold offtake / trade",rate:"n/a",fit:"Guinea gold",notes:"Confirm mechanics & provenance."},
+    {id:5,src:"AfDB / DFIs / multilaterals",type:"Development finance",sweet:"Sovereign / quasi-sovereign infra at concessional rates",rate:"Concessional (~3% range)",fit:"CIV housing; ambulance refurb scale-up",notes:"Route for deals priced below private credit. Bradley = warm intro."},
+    {id:6,src:"Local Ghanaian banks",type:"Commercial bank lending",sweet:"Prime local real estate",rate:"Commercial",fit:"Ghana 30-home project",notes:"Reportedly willing given location."}
+  ],
+  actions:[
+    {id:1,pri:"HIGH",act:"Dr Charles to send tripartite NDA for signing by Alex & Benny",owner:"Dr Charles",proj:"Botswana hospital",date:"18 Jun 2026",done:false},
+    {id:2,pri:"HIGH",act:"Dr Charles to send project docs ahead of Saudi partner fund meeting",owner:"Dr Charles",proj:"Botswana hospital",date:"19 Jun 2026",done:false},
+    {id:3,pri:"HIGH",act:"Dr Charles to provide DD pack (3yr audited, 6mo mgmt accounts, contracts)",owner:"Dr Charles",proj:"Botswana WC",date:"12 Jun 2026",done:false},
+    {id:4,pri:"HIGH",act:"Joseph to confirm CIV govt openness to JV structure",owner:"Joseph",proj:"CIV housing",date:"20 Jun 2026",done:false},
+    {id:5,pri:"MEDIUM",act:"Request BOQ + specifications for Guinea road",owner:"Joseph",proj:"Guinea road",date:"25 Jun 2026",done:false},
+    {id:6,pri:"MEDIUM",act:"Establish Guinea payment method (KTT etc.) & provenance on bauxite/gold",owner:"Joseph",proj:"Guinea resources",date:"30 Jun 2026",done:false},
+    {id:7,pri:"MEDIUM",act:"Joseph to send Peter Mahama project list (8–10)",owner:"Joseph",proj:"Mahama pipeline",date:"14 Jun 2026",done:false},
+    {id:8,pri:"MEDIUM",act:"Confirm 2nd Botswana JV partner name (RIC confirmed)",owner:"Alex / Aaron",proj:"Botswana hospital",date:"22 Jun 2026",done:false},
+    {id:9,pri:"MEDIUM",act:"Independently verify blocked-funds mechanism before any reliance",owner:"Alex / Aaron",proj:"Capital source DD",date:"21 Jun 2026",done:false},
+    {id:10,pri:"MEDIUM",act:"Agree roles & fee split between Alex, Aaron and Joseph before intros",owner:"Alex / Aaron / Joseph",proj:"All",date:"24 Jun 2026",done:false},
+    {id:11,pri:"LOW",act:"Seek AfDB intro to BD team handling projects",owner:"Alex",proj:"AfDB",date:"23 Jun 2026",done:false},
+    {id:12,pri:"LOW",act:"Clarify 'French Ministry' $35m project details",owner:"Alex / Aaron",proj:"Dr Charles pipeline",date:"10 Jun 2026",done:false},
+    {id:13,pri:"LOW",act:"Confirm Ghana 30-home financing requirement",owner:"Alex / Aaron",proj:"Ghana homes",date:"07 Jul 2026",done:false}
+  ]
+};
+
+/* ============ STATE — CLOUD (Supabase) with local fallback ============ */
+const KEY="ironroot_crm_v6";
+let DB;
+let sb=null;              // supabase client
+let CLOUD=false;          // true when connected to cloud
+let saveTimer=null;       // debounce cloud writes
+const ROW_ID=1;           // single shared row holding the whole dataset
+
+function cloudConfigured(){
+  return SUPABASE_URL && SUPABASE_KEY
+    && !SUPABASE_URL.includes("PASTE_") && !SUPABASE_KEY.includes("PASTE_");
+}
+
+async function load(){
+  if(cloudConfigured() && window.supabase){
+    try{
+      sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+      const {data,error}=await sb.from("crm").select("data").eq("id",ROW_ID).single();
+      if(error) throw error;
+      if(data && data.data){ DB=data.data; CLOUD=true; return; }
+      // no row yet: seed the cloud with the starter data
+      DB=structuredClone(SEED);
+      await sb.from("crm").upsert({id:ROW_ID,data:DB});
+      CLOUD=true; return;
+    }catch(e){
+      console.error("Cloud load failed, using local copy:",e);
+      showCloudError();
+    }
+  }
+  // local fallback (used during setup, or if cloud is unreachable)
+  try{const s=localStorage.getItem(KEY);DB=s?JSON.parse(s):structuredClone(SEED);}
+  catch(e){DB=structuredClone(SEED);}
+}
+
+function save(){
+  // always keep a local copy as backup
+  try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){}
+  if(CLOUD && sb){
+    // debounce so rapid edits become one write
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(async()=>{
+      try{ await sb.from("crm").upsert({id:ROW_ID,data:DB}); setSyncState("ok"); }
+      catch(e){ console.error("Cloud save failed:",e); setSyncState("err"); }
+    },400);
+  }
+}
+
+function setSyncState(state){
+  const el=document.getElementById("syncPill"); if(!el)return;
+  if(state==="ok"){el.querySelector(".dot").style.background="var(--green)";el.querySelector(".lbl").textContent="Synced";}
+  else if(state==="err"){el.querySelector(".dot").style.background="var(--red)";el.querySelector(".lbl").textContent="Offline";}
+}
+function showCloudError(){
+  const el=document.getElementById("syncPill"); if(el){el.querySelector(".dot").style.background="var(--red)";el.querySelector(".lbl").textContent="Local only";}
+}
+
+function nextId(arr){return arr.length?Math.max(...arr.map(x=>x.id))+1:1;}
+async function resetData(){
+  const msg=CLOUD?"Reset ALL shared data back to the original tracker? This affects everyone on the team and cannot be undone.":"Reset to the original tracker data on this device? Local edits will be lost.";
+  if(confirm(msg)){
+    localStorage.removeItem(KEY);
+    DB=structuredClone(SEED);
+    if(CLOUD && sb){try{await sb.from("crm").upsert({id:ROW_ID,data:DB});}catch(e){console.error(e);}}
+    renderAll();
+  }
+}
+
+/* ============ STAGES / SCORING ============ */
+const STAGES=["Sourcing","Early","Qualifying","Active DD","Structuring","Negotiation","Closed"];
+const STAGE_ALIAS={"Early / flagged":"Early","Relationship-building":"Qualifying"};
+function stageOf(d){return STAGE_ALIAS[d.stage]||d.stage;}
+const stageProb={"Sourcing":10,"Early":20,"Qualifying":45,"Active DD":65,"Structuring":80,"Negotiation":80,"Closed":100};
+function probability(d){let p=stageProb[stageOf(d)]??25;if(d.rag==="GREEN")p+=10;else if(d.rag==="RED")p-=15;return Math.max(5,Math.min(98,p));}
+function readiness(d){let s=0;const m={"Sourcing":10,"Early":25,"Qualifying":55,"Active DD":75,"Structuring":85,"Negotiation":85,"Closed":100};s+=m[stageOf(d)]??30;if(d.rag==="GREEN")s+=15;else if(d.rag==="AMBER")s+=5;else s-=10;if(d.need&&d.need!=="TBC")s+=10;if(d.security&&d.security!=="TBC")s+=10;if(/TBC/i.test(d.gate||""))s-=5;return Math.max(5,Math.min(100,Math.round(s)));}
+function capMatch(d){let s=40;const r=(d.route||"").toUpperCase();if(r&&!r.includes("TBC"))s+=35;if(d.rag==="GREEN")s+=15;else if(d.rag==="AMBER")s+=5;if(/kessner|afdb|bank|grant/i.test(d.route||""))s+=10;if(/TBC/.test(d.route||""))s-=20;return Math.max(5,Math.min(100,Math.round(s)));}
+/* probability colour = own scale (follows the number) */
+function probColor(v){return v>=70?"var(--green)":v>=45?"var(--amber)":"var(--red)";}
+function scoreColor(v){return v>=70?"var(--green)":v>=45?"var(--amber)":"var(--red)";}
+function fmtVal(v){return v>=1000?"£"+(v/1000).toFixed(1)+"bn":v>0?"£"+v+"m":"—";}
+const ragClass=r=>r==="GREEN"?"t-green":r==="AMBER"?"t-amber":"t-red";
+const priClass=p=>p==="HIGH"?"p-high":p==="MEDIUM"?"p-med":"p-low";
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+/* ============ ALERTS ENGINE ============ */
+function computeAlerts(){
+  const over=[],soon=[],stale=[],pri=[];
+  DB.actions.filter(a=>!a.done).forEach(a=>{
+    const d=parseDate(a.date);
+    if(d){
+      const diff=daysBetween(d,NOW);
+      if(diff<0)over.push({a,diff});
+      else if(diff<=5)soon.push({a,diff});
+      if(a.pri==="HIGH"&&diff>5)pri.push({a,diff});
+    } else if(a.pri==="HIGH")pri.push({a,diff:null});
+  });
+  DB.deals.forEach(dl=>{
+    const u=parseDate(dl.updated);
+    if(u){const diff=daysBetween(NOW,u);if(diff>=30)stale.push({dl,diff});}
+  });
+  over.sort((x,y)=>x.diff-y.diff);
+  soon.sort((x,y)=>x.diff-y.diff);
+  stale.sort((x,y)=>y.diff-x.diff);
+  return {over,soon,stale,pri};
+}
+function alertCount(){const a=computeAlerts();return a.over.length+a.soon.length+a.stale.length+a.pri.length;}
+function updateBadge(){
+  const n=alertCount();const b=document.getElementById("navBadge");
+  if(n>0){b.style.display="flex";b.textContent=n>9?"9+":n;}else b.style.display="none";
+}
+function renderAlerts(){
+  const {over,soon,stale,pri}=computeAlerts();
+  let html="";
+  const whenLabel=diff=>diff===null?"No date":diff<0?`${Math.abs(diff)}d overdue`:diff===0?"Today":diff===1?"Tomorrow":`In ${diff}d`;
+  if(over.length){
+    html+=`<div class="alert-group-title ag-over">Overdue<span class="cnt">${over.length}</span></div>`;
+    html+=over.map(({a,diff})=>`<div class="alert l-over" onclick="openAction(${a.id})"><div class="alert-top"><div><div class="alert-title">${esc(a.act)}</div><div class="alert-sub">${esc(a.proj)} · ${esc(a.owner)} · due ${esc(a.date)}</div></div><div class="alert-when" style="color:var(--red)">${whenLabel(diff)}</div></div></div>`).join("");
+  }
+  if(soon.length){
+    html+=`<div class="alert-group-title ag-soon">Due within 5 days<span class="cnt">${soon.length}</span></div>`;
+    html+=soon.map(({a,diff})=>`<div class="alert l-soon" onclick="openAction(${a.id})"><div class="alert-top"><div><div class="alert-title">${esc(a.act)}</div><div class="alert-sub">${esc(a.proj)} · ${esc(a.owner)} · due ${esc(a.date)}</div></div><div class="alert-when" style="color:var(--amber)">${whenLabel(diff)}</div></div></div>`).join("");
+  }
+  if(pri.length){
+    html+=`<div class="alert-group-title ag-pri">High priority<span class="cnt">${pri.length}</span></div>`;
+    html+=pri.map(({a,diff})=>`<div class="alert l-pri" onclick="openAction(${a.id})"><div class="alert-top"><div><div class="alert-title">${esc(a.act)}</div><div class="alert-sub">${esc(a.proj)} · ${esc(a.owner)}${a.date?' · due '+esc(a.date):''}</div></div><div class="alert-when" style="color:var(--gold)">${whenLabel(diff)}</div></div></div>`).join("");
+  }
+  if(stale.length){
+    html+=`<div class="alert-group-title ag-stale">No update in 30+ days<span class="cnt">${stale.length}</span></div>`;
+    html+=stale.map(({dl,diff})=>`<div class="alert l-stale" onclick="openDeal(${dl.id})"><div class="alert-top"><div><div class="alert-title">${esc(dl.title)}</div><div class="alert-sub">${esc(dl.country)} · ${esc(dl.stage)} · last touched ${esc(dl.updated)}</div></div><div class="alert-when" style="color:var(--mut)">${diff}d ago</div></div></div>`).join("");
+  }
+  document.getElementById("alertList").innerHTML=html||`<div class="empty-state"><div class="ico">✓</div><div class="t">All clear</div><div class="d">Nothing overdue, due soon, stale, or flagged.</div></div>`;
+}
+
+/* ============ DASHBOARD ============ */
+function renderDashboard(){
+  const d=DB.deals;
+  const total=d.reduce((t,x)=>t+(x.needVal||0),0);
+  const weighted=d.reduce((t,x)=>t+(x.needVal||0)*probability(x)/100,0);
+  const africa=d.filter(x=>x.region==="Africa").reduce((t,x)=>t+(x.needVal||0),0);
+  const africaCount=d.filter(x=>x.region==="Africa"&&(x.needVal||0)>0).length;
+  document.getElementById("s-active").textContent=fmtVal(total);
+  document.getElementById("s-active-sub").textContent=d.length+" live deals";
+  document.getElementById("s-weighted").textContent=fmtVal(Math.round(weighted));
+  document.getElementById("s-africa").textContent=fmtVal(africa);
+  document.getElementById("s-africa-sub").textContent=africaCount+" funded projects";
+  document.getElementById("s-contacts").textContent=DB.contacts.length;
+  const up=DB.actions.filter(a=>!a.done).map(a=>({a,d:parseDate(a.date)})).sort((x,y)=>{
+    if(x.d&&y.d)return x.d-y.d; if(x.d)return -1; if(y.d)return 1; return 0;
+  }).slice(0,6);
+  document.getElementById("urgentList").innerHTML=up.map(({a,d})=>{
+    const diff=d?daysBetween(d,NOW):null;
+    const col=diff===null?'var(--gold-deep)':diff<0?'var(--red)':diff<=5?'var(--amber)':'var(--gold-deep)';
+    const dlabel=d?`${String(d.getDate()).padStart(2,'0')} ${MON_NAMES[d.getMonth()]}`:'—';
+    return `<div class="acard" onclick="openAction(${a.id})"><div class="acard-row"><div><div class="acard-title">${esc(a.act)}</div><div class="acard-sub">${esc(a.proj)}</div></div><div class="acard-date" style="color:${col}">${dlabel}</div></div></div>`;
+  }).join("")||`<div class="acard" style="cursor:default"><div class="acard-sub">No upcoming actions.</div></div>`;
+}
+
+/* ============ DEALS ============ */
+let dealFilter="ALL";
+function dealCard(d){
+  const p=probability(d),col=probColor(p);
+  return `<div class="card" onclick="openDeal(${d.id})">
+    <div class="card-top"><div><div class="card-name">${esc(d.title)}</div><div class="card-loc">${esc(d.country)} · ${esc(d.sector)}</div></div><div class="card-cost">${esc(d.need||"—")}</div></div>
+    <div class="card-foot"><div class="card-stage"><span class="tag ${ragClass(d.rag)}">${d.rag}</span>${esc(d.stage)}</div><div class="prob"><span class="pbar"><i style="width:${p}%;background:${col}"></i></span><span class="pv" style="color:${col}">${p}%</span></div></div>
+  </div>`;
+}
+function renderDeals(){
+  const q=(document.getElementById("dealSearch").value||"").toLowerCase();
+  let list=DB.deals.filter(d=>dealFilter==="ALL"||d.rag===dealFilter);
+  if(q)list=list.filter(d=>(d.title+d.sponsor+d.country+d.type+d.sector).toLowerCase().includes(q));
+  list=[...list].sort((a,b)=>probability(b)-probability(a));
+  document.getElementById("dealList").innerHTML=list.map(dealCard).join("")||`<div class="empty-state"><div class="ico">◇</div><div class="t">No deals match</div><div class="d">Try a different filter or search.</div></div>`;
+}
+
+/* ============ PIPELINE ============ */
+const STAGE_ORDER=["Negotiation","Active DD","Structuring","Qualifying","Relationship-building","Early","Early / flagged","Sourcing","Closed"];
+function renderPipeline(){
+  const groups={};
+  DB.deals.forEach(d=>{(groups[d.stage]=groups[d.stage]||[]).push(d);});
+  const stages=Object.keys(groups).sort((a,b)=>{const ia=STAGE_ORDER.indexOf(a),ib=STAGE_ORDER.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib);});
+  document.getElementById("pipeList").innerHTML=stages.map(stage=>{
+    const arr=groups[stage].sort((a,b)=>probability(b)-probability(a));
+    const val=arr.reduce((t,x)=>t+(x.needVal||0),0);
+    return `<div class="row-between" style="margin:22px 0 12px"><div style="font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:.2px">${esc(stage)}</div><div style="font-size:13px;color:var(--mut)">${arr.length} · ${fmtVal(val)}</div></div>`+arr.map(dealCard).join("");
+  }).join("");
+}
+
+/* ============ PROJECTS ============ */
+let segMode="region";
+function renderProjects(){
+  const groups={};
+  DB.deals.forEach(d=>{const g=d[segMode]||"Unclassified";(groups[g]=groups[g]||[]).push(d);});
+  const entries=Object.entries(groups).sort((a,b)=>b[1].length-a[1].length);
+  document.getElementById("segList").innerHTML=entries.map(([name,arr])=>{
+    const g=arr.filter(x=>x.rag==="GREEN").length,a=arr.filter(x=>x.rag==="AMBER").length,r=arr.filter(x=>x.rag==="RED").length;
+    const val=arr.reduce((t,x)=>t+(x.needVal||0),0),tot=arr.length;
+    const seg=(n,c)=>n?`<span style="width:${n/tot*100}%;background:${c}"></span>`:"";
+    return `<div class="seg" onclick="goSegment('${esc(name).replace(/'/g,"\\'")}')">
+      <div class="seg-head"><div class="seg-name">${esc(name)}</div><div class="seg-count">${tot}</div></div>
+      <div class="seg-bar">${seg(g,"var(--green)")}${seg(a,"var(--amber)")}${seg(r,"var(--red)")}</div>
+      <div class="seg-sub">${fmtVal(val)} total · ${g} green · ${a} amber · ${r} red</div>
+    </div>`;}).join("");
+}
+let segJump=null;
+function goSegment(name){segJump={mode:segMode,val:name};dealFilter="ALL";document.querySelectorAll("#dealFilters .filt").forEach(x=>x.classList.toggle("on",x.dataset.f==="ALL"));renderDealsSeg();goView('deals');}
+function renderDealsSeg(){
+  if(!segJump){renderDeals();return;}
+  let list=DB.deals.filter(d=>(d[segJump.mode]||"Unclassified")===segJump.val).sort((a,b)=>probability(b)-probability(a));
+  document.querySelector("#deals .sect-title").innerHTML=`<em>${esc(segJump.val)}</em>`;
+  document.getElementById("dealList").innerHTML=`<div style="margin-bottom:14px"><span class="filt on">${esc(segJump.val)}</span> <span class="filt" onclick="clearSeg()">✕ clear</span></div>`+list.map(dealCard).join("");
+}
+function clearSeg(){segJump=null;document.querySelector("#deals .sect-title").innerHTML='The <em>book</em>';renderDeals();}
+
+/* ============ CONTACTS / CAPITAL / ACTIONS ============ */
+function renderContacts(){
+  const q=(document.getElementById("contactSearch").value||"").toLowerCase();
+  let list=DB.contacts;if(q)list=list.filter(c=>(c.name+c.role+c.linked).toLowerCase().includes(q));
+  document.getElementById("contactList").innerHTML=list.map(c=>`
+    <div class="lcard" onclick="openContact(${c.id})">
+      <div class="lcard-head"><div><div class="lcard-title">${esc(c.name)}</div><div class="lcard-sub">${esc(c.role)}</div></div><span class="chip">${esc(c.side)}</span></div>
+      <div class="meta"><span class="chip"><b>Influence:</b> ${esc(c.influence||"—")}</span>${c.email?`<span class="chip">✉ ${esc(c.email)}</span>`:''}${c.phone?`<span class="chip">☎ ${esc(c.phone)}</span>`:''}</div>
+    </div>`).join("")||`<div class="empty-state"><div class="ico">◉</div><div class="t">No contacts match</div><div class="d">Try a different search.</div></div>`;
+}
+function renderCapital(){
+  document.getElementById("capitalList").innerHTML=DB.capital.map(c=>`
+    <div class="lcard" onclick="openCapital(${c.id})"><div class="lcard-head"><div class="lcard-title">${esc(c.src)}</div></div><div class="lcard-sub">${esc(c.type)}</div>
+      <div class="meta"><span class="chip"><b>Rate:</b> ${esc(c.rate)}</span></div>
+    </div>`).join("");
+}
+function renderActions(){
+  const q=(document.getElementById("actionSearch").value||"").toLowerCase();
+  let list=DB.actions;if(q)list=list.filter(a=>(a.act+a.owner+a.proj).toLowerCase().includes(q));
+  const order={HIGH:0,MEDIUM:1,LOW:2};
+  list=[...list].sort((a,b)=>{
+    if(a.done!==b.done)return a.done-b.done;
+    const da=parseDate(a.date),db=parseDate(b.date);
+    if(da&&db&&+da!==+db)return da-db;
+    return order[a.pri]-order[b.pri];
+  });
+  document.getElementById("actionList").innerHTML=list.map(a=>{
+    const d=parseDate(a.date),diff=d?daysBetween(d,NOW):null;
+    const overdue=diff!==null&&diff<0&&!a.done;
+    return `<div class="acard ${a.done?'done':''}" onclick="openAction(${a.id})"><div class="acard-row"><div><div class="acard-title">${esc(a.act)}</div><div class="acard-sub">${esc(a.proj)} · ${esc(a.owner)} · ${esc(a.date)}${overdue?' · <span style="color:var(--red);font-weight:700">overdue</span>':''}</div></div><span class="pri ${priClass(a.pri)}">${a.pri}</span></div></div>`;
+  }).join("")||`<div class="empty-state"><div class="ico">✓</div><div class="t">No actions match</div><div class="d">Try a different search.</div></div>`;
+}
+function renderAll(){renderDashboard();if(segJump)renderDealsSeg();else renderDeals();renderPipeline();renderProjects();renderContacts();renderCapital();renderActions();renderAlerts();updateBadge();}
+
+/* ============ NAV ============ */
+function goView(view){
+  if(view!=="deals")clearSegSilent();
+  document.querySelectorAll(".view").forEach(vw=>vw.classList.remove("active"));
+  document.getElementById(view).classList.add("active");
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.v===view));
+  window.scrollTo(0,0);
+}
+function clearSegSilent(){if(segJump){segJump=null;document.querySelector("#deals .sect-title").innerHTML='The <em>book</em>';renderDeals();}}
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>goView(b.dataset.v)));
+document.getElementById("dealFilters").addEventListener("click",e=>{if(!e.target.dataset.f)return;segJump=null;document.querySelector("#deals .sect-title").innerHTML='The <em>book</em>';document.querySelectorAll("#dealFilters .filt").forEach(x=>x.classList.remove("on"));e.target.classList.add("on");dealFilter=e.target.dataset.f;renderDeals();});
+document.getElementById("segTabs").addEventListener("click",e=>{if(!e.target.dataset.s)return;document.querySelectorAll("#segTabs .seg-tab").forEach(x=>x.classList.remove("on"));e.target.classList.add("on");segMode=e.target.dataset.s;renderProjects();});
+document.getElementById("dealSearch").addEventListener("input",()=>{segJump=null;renderDeals();});
+document.getElementById("contactSearch").addEventListener("input",renderContacts);
+document.getElementById("actionSearch").addEventListener("input",renderActions);
+
+/* ============ SLIDE PANEL ============ */
+const ovl=document.getElementById("ovl"),panel=document.getElementById("panel");
+function closePanel(){ovl.classList.remove("open");panel.innerHTML="";}
+ovl.addEventListener("click",e=>{if(e.target===ovl)closePanel();});
+function openDeal(id){
+  const d=DB.deals.find(x=>x.id===id);if(!d)return;
+  const rd=readiness(d),cm=capMatch(d),p=probability(d);
+  panel.innerHTML=`
+    <div class="panel-head"><div class="panel-id">Deal · #${d.id}</div><button class="panel-x" onclick="closePanel()">✕</button></div>
+    <div class="panel-title">${esc(d.title)}</div>
+    <div class="prow"><div class="pk">Status</div><div class="pv"><span class="tag ${ragClass(d.rag)}">${d.rag}</span></div></div>
+    <div class="prow"><div class="pk">Stage</div><div class="pv">${esc(d.stage)}</div></div>
+    <div class="prow"><div class="pk">Probability</div><div class="pv" style="color:${probColor(p)}">${p}%</div></div>
+    <div class="prow"><div class="pk">Capital needed</div><div class="pv">${esc(d.need)}</div></div>
+    <div class="prow"><div class="pk">Region · Sector</div><div class="pv">${esc(d.region)} · ${esc(d.sector)}</div></div>
+    <div class="prow"><div class="pk">Owner</div><div class="pv">${esc(d.owner)}</div></div>
+    <div class="prow"><div class="pk">Last updated</div><div class="pv">${esc(d.updated||"—")}</div></div>
+    <div class="prow" style="border:none"><div class="pk">Sponsor</div><div class="pv">${esc(d.sponsor)}</div></div>
+    <div class="scorewrap">
+      <div class="scorebox"><div class="sl">Readiness</div><div class="sv" style="color:${scoreColor(rd)}">${rd}</div><div class="bar"><i style="width:${rd}%;background:${scoreColor(rd)}"></i></div></div>
+      <div class="scorebox"><div class="sl">Capital match</div><div class="sv" style="color:${scoreColor(cm)}">${cm}</div><div class="bar"><i style="width:${cm}%;background:${scoreColor(cm)}"></i></div></div>
+    </div>
+    <div class="panel-sec"><h4>Security structure</h4><p>${esc(d.security)}</p></div>
+    <div class="panel-sec"><h4>Capital route</h4><p>${esc(d.route)}</p></div>
+    <div class="panel-sec"><h4>Gating item</h4><p>${esc(d.gate)}</p></div>
+    <div class="panel-sec"><h4>Next action</h4><p>${esc(d.next)}</p></div>
+    <div class="panel-actions"><button class="btn ghost" onclick="openDealForm(${d.id})">Edit deal</button><button class="btn danger" onclick="delItem('deals',${d.id});closePanel()">Delete</button></div>`;
+  ovl.classList.add("open");
+}
+function openContact(id){
+  const c=DB.contacts.find(x=>x.id===id);if(!c)return;
+  const mailIcon='<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>';
+  const phoneIcon='<svg viewBox="0 0 24 24"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v3a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg>';
+  const emailRow=c.email?`<a href="mailto:${esc(c.email)}" class="contact-link">${mailIcon}${esc(c.email)}</a>`:`<span class="contact-empty">No email yet — tap Edit to add</span>`;
+  const phoneRow=c.phone?`<a href="tel:${esc(c.phone)}" class="contact-link">${phoneIcon}${esc(c.phone)}</a>`:`<span class="contact-empty">No phone yet — tap Edit to add</span>`;
+  panel.innerHTML=`
+    <div class="panel-head"><div class="panel-id">Contact</div><button class="panel-x" onclick="closePanel()">✕</button></div>
+    <div class="panel-title">${esc(c.name)}</div>
+    <div class="contact-actions">${emailRow}${phoneRow}</div>
+    <div class="prow"><div class="pk">Role</div><div class="pv">${esc(c.role)}</div></div>
+    <div class="prow"><div class="pk">Side</div><div class="pv">${esc(c.side)}</div></div>
+    <div class="prow"><div class="pk">Influence</div><div class="pv">${esc(c.influence||"—")}</div></div>
+    <div class="prow" style="border:none"><div class="pk">Linked to</div><div class="pv">${esc(c.linked)}</div></div>
+    <div class="panel-sec"><h4>Notes</h4><p>${esc(c.notes)||"—"}</p></div>
+    <div class="panel-actions"><button class="btn ghost" onclick="openContactForm(${c.id})">Edit contact</button><button class="btn danger" onclick="delItem('contacts',${c.id});closePanel()">Delete</button></div>`;
+  ovl.classList.add("open");
+}
+function openCapital(id){
+  const c=DB.capital.find(x=>x.id===id);if(!c)return;
+  panel.innerHTML=`
+    <div class="panel-head"><div class="panel-id">Capital source</div><button class="panel-x" onclick="closePanel()">✕</button></div>
+    <div class="panel-title">${esc(c.src)}</div>
+    <div class="prow"><div class="pk">Type</div><div class="pv">${esc(c.type)}</div></div>
+    <div class="prow" style="border:none"><div class="pk">Pricing / rate</div><div class="pv">${esc(c.rate)}</div></div>
+    <div class="panel-sec"><h4>Sweet spot</h4><p>${esc(c.sweet)}</p></div>
+    <div class="panel-sec"><h4>Best fit</h4><p>${esc(c.fit)}</p></div>
+    <div class="panel-sec"><h4>Notes</h4><p>${esc(c.notes)}</p></div>
+    <div class="panel-actions"><button class="btn ghost" onclick="closePanel()">Close</button></div>`;
+  ovl.classList.add("open");
+}
+function openAction(id){
+  const a=DB.actions.find(x=>x.id===id);if(!a)return;
+  const d=parseDate(a.date),diff=d?daysBetween(d,NOW):null;
+  const whenTxt=diff===null?'No due date':diff<0?`${Math.abs(diff)} days overdue`:diff===0?'Due today':diff===1?'Due tomorrow':`Due in ${diff} days`;
+  const whenCol=diff===null?'var(--mut)':diff<0?'var(--red)':diff<=5?'var(--amber)':'var(--ink)';
+  panel.innerHTML=`
+    <div class="panel-head"><div class="panel-id">Action · ${esc(a.pri)}</div><button class="panel-x" onclick="closePanel()">✕</button></div>
+    <div class="panel-title">${esc(a.act)}</div>
+    <div class="prow"><div class="pk">Linked project</div><div class="pv">${esc(a.proj)}</div></div>
+    <div class="prow"><div class="pk">Owner</div><div class="pv">${esc(a.owner)}</div></div>
+    <div class="prow"><div class="pk">Due date</div><div class="pv">${esc(a.date)} · <span style="color:${whenCol}">${whenTxt}</span></div></div>
+    <div class="prow" style="border:none"><div class="pk">Status</div><div class="pv">${a.done?'<span class="tag t-green">Done</span>':'<span class="tag t-amber">Open</span>'}</div></div>
+    <div class="panel-actions"><button class="btn" onclick="toggleDone(${a.id});openAction(${a.id})">${a.done?'Reopen':'Mark Done'}</button><button class="btn ghost" onclick="openActionForm(${a.id})">Edit</button><button class="btn danger" onclick="delItem('actions',${a.id});closePanel()">Delete</button></div>`;
+  ovl.classList.add("open");
+}
+
+/* ============ EDIT / ADD ============ */
+function toggleDone(id){const a=DB.actions.find(x=>x.id===id);if(a){a.done=!a.done;save();renderActions();renderDashboard();renderAlerts();updateBadge();}}
+function delItem(type,id){if(confirm("Delete this item?")){DB[type]=DB[type].filter(x=>x.id!==id);save();renderAll();}}
+function fld(label,id,val,type){type=type||"input";if(type==="textarea")return `<div class="fld"><label>${label}</label><textarea id="f-${id}">${esc(val||"")}</textarea></div>`;return `<div class="fld"><label>${label}</label><input id="f-${id}" value="${esc(val||"")}"></div>`;}
+function selField(label,id,val,opts){return `<div class="fld"><label>${label}</label><select id="f-${id}">${opts.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join("")}</select></div>`;}
+function v(id){const e=document.getElementById("f-"+id);return e?e.value.trim():"";}
+function openDealForm(id){
+  const d=id?DB.deals.find(x=>x.id===id):{};
+  panel.innerHTML=`<div class="panel-head"><div class="panel-id">${id?"Edit deal":"New deal"}</div><button class="panel-x" onclick="closePanel()">✕</button></div>
+    ${fld("Title","title",d.title)}
+    ${fld("Subtitle (location / detail)","sub",d.sub)}
+    ${fld("Country","country",d.country)}
+    ${selField("Region","region",d.region||"Africa",["Africa","Europe","Middle East","Unclassified"])}
+    ${selField("Sector","sector",d.sector||"Infrastructure",["Infrastructure","Healthcare","Real estate / housing","Natural resources","Relationship / channel","Unclassified"])}
+    ${selField("Status (RAG)","rag",d.rag||"AMBER",["GREEN","AMBER","RED"])}
+    ${fld("Deal type","type",d.type)}
+    ${fld("Capital required","need",d.need)}
+    ${fld("Approx value in £m (number only)","needVal",d.needVal)}
+    ${selField("Stage","stage",d.stage||"Early",STAGES)}
+    ${fld("Internal owner","owner",d.owner)}
+    ${fld("Sponsor","sponsor",d.sponsor)}
+    ${fld("Security structure","security",d.security,"textarea")}
+    ${fld("Capital route","route",d.route,"textarea")}
+    ${fld("Gating item","gate",d.gate,"textarea")}
+    ${fld("Next action","next",d.next)}
+    <div class="panel-actions"><button class="btn ghost" onclick="closePanel()">Cancel</button><button class="btn" onclick="saveDeal(${id||0})">Save deal</button></div>`;
+  ovl.classList.add("open");
+}
+function saveDeal(id){const o={title:v("title"),sub:v("sub"),country:v("country"),region:v("region"),sector:v("sector"),rag:v("rag"),type:v("type"),need:v("need"),needVal:parseFloat(v("needVal"))||0,stage:v("stage"),owner:v("owner"),sponsor:v("sponsor"),security:v("security"),route:v("route"),gate:v("gate"),next:v("next"),updated:todayStr()};if(!o.title){alert("Title is required.");return;}if(id){Object.assign(DB.deals.find(x=>x.id===id),o);}else{o.id=nextId(DB.deals);DB.deals.push(o);}save();renderAll();closePanel();}
+function openContactForm(id){
+  const c=id?DB.contacts.find(x=>x.id===id):{};
+  panel.innerHTML=`<div class="panel-head"><div class="panel-id">${id?"Edit contact":"New contact"}</div><button class="panel-x" onclick="closePanel()">✕</button></div>
+    ${fld("Name","name",c.name)}
+    ${fld("Role","role",c.role)}
+    ${selField("Side","side",c.side||"Project side",["Our side","Our side (intermediary)","Capital source","Project side","DFI contact"])}
+    ${selField("Influence","influence",c.influence||"Medium",["High","Medium","Low"])}
+    ${fld("Email","email",c.email)}
+    ${fld("Phone","phone",c.phone)}
+    ${fld("Linked to / projects","linked",c.linked)}
+    ${fld("Notes","notes",c.notes,"textarea")}
+    <div class="panel-actions"><button class="btn ghost" onclick="closePanel()">Cancel</button><button class="btn" onclick="saveContact(${id||0})">Save</button></div>`;
+  ovl.classList.add("open");
+}
+function saveContact(id){const o={name:v("name"),role:v("role"),side:v("side"),influence:v("influence"),email:v("email"),phone:v("phone"),linked:v("linked"),notes:v("notes")};if(!o.name){alert("Name is required.");return;}if(id){Object.assign(DB.contacts.find(x=>x.id===id),o);}else{o.id=nextId(DB.contacts);DB.contacts.push(o);}save();renderAll();closePanel();}
+function openActionForm(id){
+  const a=id?DB.actions.find(x=>x.id===id):{};
+  panel.innerHTML=`<div class="panel-head"><div class="panel-id">${id?"Edit action":"New action"}</div><button class="panel-x" onclick="closePanel()">✕</button></div>
+    ${fld("Action","act",a.act,"textarea")}
+    ${selField("Priority","pri",a.pri||"MEDIUM",["HIGH","MEDIUM","LOW"])}
+    ${fld("Owner","owner",a.owner)}
+    ${fld("Linked project","proj",a.proj)}
+    ${fld("Due date (e.g. 21 Jun 2026)","date",a.date||todayStr())}
+    <div class="panel-actions"><button class="btn ghost" onclick="closePanel()">Cancel</button><button class="btn" onclick="saveAction(${id||0})">Save</button></div>`;
+  ovl.classList.add("open");
+}
+function saveAction(id){const o={act:v("act"),pri:v("pri"),owner:v("owner"),proj:v("proj"),date:v("date")};if(!o.act){alert("Action text is required.");return;}if(id){Object.assign(DB.actions.find(x=>x.id===id),o);}else{o.id=nextId(DB.actions);o.done=false;DB.actions.push(o);}save();renderAll();closePanel();}
+
+/* ============ INIT ============ */
+async function boot(){
+  // password gate
+  if(TEAM_PASSWORD && !sessionStorage.getItem("ir_unlocked")){
+    const tries=()=>{
+      const ans=prompt("IronRoot CRM — enter team password:");
+      if(ans===null){document.body.innerHTML='<div style="font-family:-apple-system,sans-serif;color:#9aa8c6;text-align:center;padding:60px 24px">Locked. Refresh the page to try again.</div>';return false;}
+      if(ans===TEAM_PASSWORD){sessionStorage.setItem("ir_unlocked","1");return true;}
+      alert("Incorrect password.");return tries();
+    };
+    if(!tries())return;
+  }
+  await load();
+  renderAll();
+  if(CLOUD)setSyncState("ok");
+  // refresh from cloud when the app regains focus (picks up teammates' changes)
+  document.addEventListener("visibilitychange",async()=>{
+    if(!document.hidden && CLOUD && sb){
+      try{const {data}=await sb.from("crm").select("data").eq("id",ROW_ID).single();if(data&&data.data){DB=data.data;renderAll();}}catch(e){}
+    }
+  });
+}
+boot();
+</script>
+</body>
+</html>
